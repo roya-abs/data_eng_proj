@@ -7,7 +7,7 @@ import os
 
 load_dotenv(dotenv_path="./.env")
 
-API_key = os.getenv("API_key")
+API_key = os.getenv("API_KEY")
 channel_handle = "MrBeast"
 def get_playlist_id():
     try: 
