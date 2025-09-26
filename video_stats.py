@@ -60,8 +60,64 @@ def get_video_id(playlistId):
         raise e
 
 
+#since the maximum data we can extract using the list of video ids is 50 and our list is larger than that we need to define batches
+
+def video_data_extract(video_ids):
+
+    extracted_data = []
+    def batch_list(video_id_list, batch_size):
+        for video_id_inx in range(0, len(video_id_list), batch_size):
+            yield video_id_list[video_id_inx : video_id_inx + batch_size]
+
+    try:
+        for batch in batch_list(video_ids, max_results):
+            video_ids_str = ','.join(batch)
+
+            url =  f'https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&part=snippet&part=statistics&id={video_ids_str}&key={API_key}'
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            for item in data.get('items', []):
+                id = item['id']
+                snippet = item['snippet']
+                content = item['contentDetails']
+                statistics = item['statistics']
+
+                title = snippet['title']
+                publish = snippet['publishedAt']
+                duration = content['duration']
+                view = statistics.get('viewCount', None)
+                like = statistics.get('likeCount', None)
+                comment = statistics.get('commentCount', None)
+
+                video_data = {'title': title,
+                            'video_id': id,
+                              'publishAt': publish,
+                              'duration': duration, 
+                              'viewCount': view,
+                              'likeCount': like,
+                              'commentCount': comment
+                              }
+                extracted_data.append(video_data)
+        return extracted_data
+
+
+
+
+
+
+    except requests.exceptions.RequestException as e:
+        raise e
+
+
+
+
+
+
 if __name__ == "__main__":
     playlistId = get_playlist_id()
-    get_video_id(playlistId)
+    video_ids = get_video_id(playlistId)
+    video_data = video_data_extract(video_ids)
 
 
